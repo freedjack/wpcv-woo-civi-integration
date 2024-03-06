@@ -290,6 +290,7 @@ class WPCV_Woo_Civi_Membership {
 		}
 
 		$params = [
+			'version' => 3,
 			'sequential' => 1,
 			'is_active' => 1,
 			'options' => [
@@ -306,7 +307,7 @@ class WPCV_Woo_Civi_Membership {
 		 */
 		$params = apply_filters( 'wpcv_woo_civi/membership_types/get/params', $params );
 
-		$result = civicrm_api3( 'MembershipType', 'get', $params );
+		$result = civicrm_api( 'MembershipType', 'get', $params );
 
 		// Return early if something went wrong.
 		if ( ! empty( $result['error'] ) ) {
@@ -371,7 +372,7 @@ class WPCV_Woo_Civi_Membership {
 
 			$result = civicrm_api3( 'MembershipType', 'get', $params );
 
-		} catch ( CiviCRM_API3_Exception $e ) {
+		} catch ( Exception $e ) {
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to retrieve CiviCRM Membership Types.', 'wpcv-woo-civi-integration' ) );
@@ -433,7 +434,7 @@ class WPCV_Woo_Civi_Membership {
 
 			return $result;
 
-		} catch ( CiviCRM_API3_Exception $e ) {
+		} catch ( Exception $e ) {
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to retrieve CiviCRM Membership Type.', 'wpcv-woo-civi-integration' ) );
@@ -485,7 +486,7 @@ class WPCV_Woo_Civi_Membership {
 
 			$result = civicrm_api3( 'PriceField', 'get', $params );
 
-		} catch ( CiviCRM_API3_Exception $e ) {
+		} catch ( Exception $e ) {
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to retrieve default Membership Price Field ID', 'wpcv-woo-civi-integration' ) );

@@ -340,6 +340,7 @@ class WPCV_Woo_Civi_Contribution {
 
 		// Maybe debug?
 		$params = [
+			'version' => 3,
 			'debug' => 1,
 		] + $contribution;
 
@@ -357,7 +358,7 @@ class WPCV_Woo_Civi_Contribution {
 		 *
 		 * $params['id'] = 255;
 		 */
-		$result = civicrm_api3( 'Contribution', 'create', $params );
+		$result = civicrm_api( 'Contribution', 'create', $params );
 
 		// Sanity check.
 		if ( ! empty( $result['error'] ) ) {
@@ -440,7 +441,7 @@ class WPCV_Woo_Civi_Contribution {
 
 			$result = civicrm_api3( 'Order', 'create', $params );
 
-		} catch ( CiviCRM_API3_Exception $e ) {
+		} catch ( Exception $e ) {
 
 			// Write to CiviCRM log and continue.
 			CRM_Core_Error::debug_log_message( __( 'Unable to create an Order via the CiviCRM Order API', 'wpcv-woo-civi-integration' ) );
@@ -734,7 +735,7 @@ class WPCV_Woo_Civi_Contribution {
 
 			$result = civicrm_api3( 'Payment', 'create', $params );
 
-		} catch ( CiviCRM_API3_Exception $e ) {
+		} catch ( Exception $e ) {
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to create Payment record.', 'wpcv-woo-civi-integration' ) );
@@ -854,7 +855,7 @@ class WPCV_Woo_Civi_Contribution {
 
 			$result = civicrm_api3( 'Note', 'create', $params );
 
-		} catch ( CiviCRM_API3_Exception $e ) {
+		} catch ( Exception $e ) {
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to create a Note for a Contribution.', 'wpcv-woo-civi-integration' ) );

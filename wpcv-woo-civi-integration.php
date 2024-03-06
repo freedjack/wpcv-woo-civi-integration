@@ -6,7 +6,7 @@
  * Description: Provides integration between CiviCRM and WooCommerce.
  * Author: WPCV
  * Author URI: https://github.com/WPCV
- * Version: 3.0
+ * Version: 3.1.1a
  * Requires at least: 5.7
  * Requires PHP: 7.1
  * Text Domain: wpcv-woo-civi-integration
@@ -239,6 +239,9 @@ class WPCV_Woo_Civi {
 			// Enable translation first.
 			add_action( 'plugins_loaded', [ self::$instance, 'enable_translation' ] );
 
+			// Declare status of compatibility with WooCommerce HPOS.
+			add_action( 'before_woocommerce_init', [ self::$instance, 'declare_woocommerce_hpos_status' ] );
+
 			// Setup plugin when WooCommerce has been bootstrapped.
 			add_action( 'woocommerce_init', [ self::$instance, 'initialise' ] );
 
@@ -294,7 +297,7 @@ class WPCV_Woo_Civi {
 	 */
 	private static function define_constants() {
 
-		define( 'WPCV_WOO_CIVI_VERSION', '3.0' );
+		define( 'WPCV_WOO_CIVI_VERSION', '3.1.1a' );
 		define( 'WPCV_WOO_CIVI_FILE', __FILE__ );
 		define( 'WPCV_WOO_CIVI_URL', plugin_dir_url( WPCV_WOO_CIVI_FILE ) );
 		define( 'WPCV_WOO_CIVI_PATH', plugin_dir_path( WPCV_WOO_CIVI_FILE ) );
@@ -409,9 +412,6 @@ class WPCV_Woo_Civi {
 
 		// Add settings link to plugin listing page.
 		add_filter( 'plugin_action_links', [ $this, 'add_action_links' ], 10, 2 );
-
-		// Declare status of compatibility with WooCommerce HPOS.
-		add_action( 'before_woocommerce_init', [ $this, 'declare_woocommerce_hpos_status' ] );
 
 	}
 
