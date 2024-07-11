@@ -562,7 +562,9 @@ class WPCV_Woo_Civi_Contribution {
 
 		// Maybe assign "Pay Later" based on Payment Method.
 		$pay_later_methods = get_option( 'woocommerce_civicrm_pay_later_gateways', [] );
-		if ( in_array( $order->get_payment_method(), $pay_later_methods, true ) ) {
+
+		if ( in_array( $order->get_payment_method(), $pay_later_methods, true ) || empty( $order->get_payment_method() ) ) {
+      
 			$params['is_pay_later'] = 1;
 		}
 
@@ -820,7 +822,8 @@ class WPCV_Woo_Civi_Contribution {
 
 		// Skip if "Pay Later" Payment Method.
 		$pay_later_methods = get_option( 'woocommerce_civicrm_pay_later_gateways', [] );
-		if ( in_array( $order->get_payment_method(), $pay_later_methods, true ) ) {
+    
+		if ( in_array( $order->get_payment_method(), $pay_later_methods, true ) || empty($order->get_payment_method()) ) {
 			return;
 		}
 
