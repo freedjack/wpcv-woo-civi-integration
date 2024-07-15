@@ -904,14 +904,15 @@ class WPCV_Woo_Civi_Contact {
 		$prepared_contact = $this->prepare_from_order( $order );
 
 		// FIXME: Shouldn't the following depend on if there is existing data?
+		// Change: Added contact name checks.
 
 		// Overwrite First Name with data from Order.
-		if ( ! empty( $prepared_contact['first_name'] ) ) {
+		if ( empty($contact['first_name']) && ! empty( $prepared_contact['first_name'] ) ) {
 			$contact['first_name'] = $prepared_contact['first_name'];
 		}
 
 		// Overwrite Last Name with data from Order.
-		if ( ! empty( $prepared_contact['last_name'] ) ) {
+		if ( empty($contact['last_name']) && ! empty( $prepared_contact['last_name'] ) ) {
 			$contact['last_name'] = $prepared_contact['last_name'];
 		}
 
