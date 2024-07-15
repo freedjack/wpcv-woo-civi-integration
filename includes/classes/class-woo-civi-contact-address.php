@@ -72,7 +72,7 @@ class WPCV_Woo_Civi_Contact_Address {
 	public function initialise() {
 
 		// Store the WooCommerce option as a boolean.
-		$option = get_option( 'woocommerce_civicrm_sync_contact_address', false );
+		$option             = get_option( 'woocommerce_civicrm_sync_contact_address', false );
 		$this->sync_enabled = WPCV_WCI()->helper->check_yes_no_value( $option );
 
 		// Register Address-related hooks.
@@ -148,7 +148,7 @@ class WPCV_Woo_Civi_Contact_Address {
 
 			$country_id = null;
 			if ( is_callable( [ $order, "get_{$address_type}_country" ] ) ) {
-				$country = $order->{"get_{$address_type}_country"}();
+				$country    = $order->{"get_{$address_type}_country"}();
 				$country_id = WPCV_WCI()->settings_states->get_civicrm_country_id( $country );
 			}
 
@@ -193,9 +193,9 @@ class WPCV_Woo_Civi_Contact_Address {
 			// Try and find an existing CiviCRM Address record.
 			foreach ( $existing_addresses as $existing ) {
 				// Does this Address have the desired Location Type?
-				if ( isset( $existing->location_type_id ) && $existing->location_type_id === $location_type_id ) {
+				if ( isset( $existing->location_type_id ) && (int) $existing->location_type_id === $location_type_id ) {
 					// Let's update that one.
-					$address_params['id'] = $existing->id;
+					$address_params['id'] = (int) $existing->id;
 					// Skip if no update needed.
 					if ( $this->is_match( $existing, $address_params ) ) {
 						continue 2;
@@ -343,7 +343,7 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Try and find the Contact.
 		$contact = WPCV_WCI()->contact->get_by_id( $object_ref->contact_id );
-		if ( $contact === false ) {
+		if ( false === $contact ) {
 			return;
 		}
 
@@ -392,9 +392,9 @@ class WPCV_Woo_Civi_Contact_Address {
 			$value = $object_ref->{$civi_field};
 
 			// Override for special fields.
-			if ( $civi_field === 'country_id' ) {
+			if ( 'country_id' === $civi_field ) {
 				$value = WPCV_WCI()->settings_states->get_civicrm_country_iso_code( $value );
-			} elseif ( $civi_field === 'state_province_id' ) {
+			} elseif ( 'state_province_id' === $civi_field ) {
 				$value = WPCV_WCI()->settings_states->get_civicrm_state_province_name( $value );
 			}
 
@@ -445,13 +445,13 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Let's make an array of the data.
 		$args = [
-			'op' => $op,
-			'object_name' => $object_name,
-			'object_id' => $object_id,
-			'object_ref' => $object_ref,
+			'op'           => $op,
+			'object_name'  => $object_name,
+			'object_id'    => $object_id,
+			'object_ref'   => $object_ref,
 			'address_type' => $address_type,
-			'customer' => $customer,
-			'user_id' => $ufmatch['uf_id'],
+			'customer'     => $customer,
+			'user_id'      => $ufmatch['uf_id'],
 		];
 
 		/**
@@ -473,9 +473,9 @@ class WPCV_Woo_Civi_Contact_Address {
 	 * @since 2.0
 	 *
 	 * @param integer $user_id The WordPress User ID.
-	 * @param string  $load_address The Address Type. Either 'shipping' or 'billing'.
+	 * @param string  $address_type The Address Type. Either 'shipping' or 'billing'.
 	 */
-	public function sync_woo_to_civicrm( $user_id, $load_address ) {
+	public function sync_woo_to_civicrm( $user_id, $address_type ) {
 
 		// Bail if Address Sync is not enabled.
 		if ( ! $this->sync_enabled ) {
@@ -490,7 +490,7 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Try and find the Contact.
 		$contact = WPCV_WCI()->contact->get_by_id( $ufmatch['contact_id'] );
-		if ( $contact === false ) {
+		if ( false === $contact ) {
 			return;
 		}
 
@@ -505,7 +505,7 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Build the array for the mapped CiviCRM Address.
 		$address_params = [];
-		foreach ( $this->get_field_mappings( $load_address ) as $wc_field => $civi_field ) {
+		foreach ( $this->get_field_mappings( $address_type ) as $wc_field => $civi_field ) {
 
 			// Assign the value.
 			$value = '';
@@ -514,9 +514,9 @@ class WPCV_Woo_Civi_Contact_Address {
 			}
 
 			// Override for special fields.
-			if ( $civi_field === 'country_id' ) {
+			if ( 'country_id' === $civi_field ) {
 				$value = WPCV_WCI()->settings_states->get_civicrm_country_id( $value );
-			} elseif ( $civi_field === 'state_province_id' ) {
+			} elseif ( 'state_province_id' === $civi_field ) {
 				// This relies on the order of the Field mappings to work.
 				$value = WPCV_WCI()->settings_states->get_civicrm_state_province_id( $value, $address_params['country_id'] );
 			}
@@ -528,7 +528,7 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Get the Location Type of the edited Woo Address.
 		$mapped_location_types = WPCV_WCI()->helper->get_mapped_location_types();
-		$location_type_id = $mapped_location_types[ $load_address ];
+		$location_type_id      = $mapped_location_types[ $address_type ];
 
 		// Get the matching Address from CiviCRM.
 		$existing_address = $this->get_by_contact_id_and_location( $contact['id'], $location_type_id );
@@ -538,12 +538,12 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Create new Address or update existing.
 		if ( ! empty( $existing_address ) ) {
-			$params = array_merge( $existing_address, $address_params );
+			$params  = array_merge( $existing_address, $address_params );
 			$address = $this->update( $params );
 		} else {
-			$address_params['contact_id'] = $contact['id'];
+			$address_params['contact_id']       = $contact['id'];
 			$address_params['location_type_id'] = $location_type_id;
-			$address = $this->create( $address_params );
+			$address                            = $this->create( $address_params );
 		}
 
 		// Rehook callback.
@@ -551,11 +551,11 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Let's make an array of the data.
 		$args = [
-			'user_id' => $user_id,
-			'address_type' => $load_address,
-			'customer' => $customer,
-			'contact' => $contact,
-			'address' => $address,
+			'user_id'      => $user_id,
+			'address_type' => $address_type,
+			'customer'     => $customer,
+			'contact'      => $contact,
+			'address'      => $address,
 		];
 
 		/**
@@ -589,19 +589,23 @@ class WPCV_Woo_Civi_Contact_Address {
 			return false;
 		}
 
-		// Call the API.
-		$result = civicrm_api3( 'Address', 'create', $params );
+		// Add API version.
+		$params['version'] = 3;
 
-		// Log and bail if there's an error.
+		// Call the API.
+		$result = civicrm_api( 'Address', 'create', $params );
+
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
-			$e = new Exception();
+			$e     = new Exception();
 			$trace = $e->getTraceAsString();
-			error_log( print_r( [
-				'method' => __METHOD__,
-				'params' => $params,
-				'result' => $result,
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
 				'backtrace' => $trace,
-			], true ) );
+			];
+			WPCV_WCI()->log_error( $log );
 			return false;
 		}
 
@@ -630,14 +634,15 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Log and bail if there's no Address ID.
 		if ( empty( $params['id'] ) ) {
-			$e = new \Exception();
+			$e     = new \Exception();
 			$trace = $e->getTraceAsString();
-			error_log( print_r( [
-				'method' => __METHOD__,
-				'message' => __( 'A numeric ID must be present to update an Address.', 'wpcv-woo-civi-integration' ),
-				'address' => $address,
+			$log   = [
+				'method'    => __METHOD__,
+				'message'   => __( 'A numeric ID must be present to update an Address.', 'wpcv-woo-civi-integration' ),
+				'address'   => $address,
 				'backtrace' => $trace,
-			], true ) );
+			];
+			WPCV_WCI()->log_error( $log );
 			return false;
 		}
 
@@ -666,11 +671,12 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Construct API query.
 		$params = [
+			'version'    => 3,
 			'contact_id' => $contact_id,
 		];
 
 		// Get Address details via API.
-		$result = civicrm_api3( 'Address', 'get', $params );
+		$result = civicrm_api( 'Address', 'get', $params );
 
 		// Bail if there's an error.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
@@ -712,8 +718,8 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Construct API query.
 		$params = [
-			'version' => 3,
-			'contact_id' => $contact_id,
+			'version'          => 3,
+			'contact_id'       => $contact_id,
 			'location_type_id' => $location_type_id,
 		];
 
@@ -757,7 +763,7 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Construct API query.
 		$params = [
-			'version' => 3,
+			'version'    => 3,
 			'is_primary' => 1,
 			'contact_id' => $contact_id,
 		];
@@ -805,9 +811,9 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Construct API query.
 		$params = [
-			'version' => 3,
+			'version'          => 3,
 			'location_type_id' => (int) $location_types['billing'],
-			'contact_id' => $contact_id,
+			'contact_id'       => $contact_id,
 		];
 
 		// Get Address details via API.
@@ -850,7 +856,7 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Construct API query.
 		$params = [
-			'version' => 3,
+			'version'    => 3,
 			'is_billing' => 1,
 			'contact_id' => $contact_id,
 		];
@@ -899,26 +905,28 @@ class WPCV_Woo_Civi_Contact_Address {
 		}
 
 		$params = [
-			'field' => 'location_type_id',
+			'version' => 3,
+			'field'   => 'location_type_id',
 			'options' => [
 				'limit' => 0,
 			],
 		];
 
-		$result = civicrm_api3( 'Address', 'getoptions', $params );
+		$result = civicrm_api( 'Address', 'getoptions', $params );
 
 		// Return early if something went wrong.
-		if ( ! empty( $result['error'] ) ) {
+		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
 
 			// Write details to PHP log.
-			$e = new \Exception();
+			$e     = new \Exception();
 			$trace = $e->getTraceAsString();
-			error_log( print_r( [
-				'method' => __METHOD__,
-				'params' => $params,
-				'result' => $result,
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
 				'backtrace' => $trace,
-			], true ) );
+			];
+			WPCV_WCI()->log_error( $log );
 
 			return $this->location_types;
 
@@ -946,11 +954,11 @@ class WPCV_Woo_Civi_Contact_Address {
 		$mapped_address = [
 			$address_type . '_address_1' => 'street_address',
 			$address_type . '_address_2' => 'supplemental_address_1',
-			$address_type . '_city' => 'city',
-			$address_type . '_postcode' => 'postal_code',
-			$address_type . '_country' => 'country_id',
-			$address_type . '_state' => 'state_province_id',
-			$address_type . '_company' => 'name',
+			$address_type . '_city'      => 'city',
+			$address_type . '_postcode'  => 'postal_code',
+			$address_type . '_country'   => 'country_id',
+			$address_type . '_state'     => 'state_province_id',
+			$address_type . '_company'   => 'name',
 		];
 
 		/**

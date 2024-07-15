@@ -47,7 +47,7 @@ class WPCV_Woo_Civi_Contact_Phone {
 	public function initialise() {
 
 		// Store the WooCommerce option as a boolean.
-		$option = get_option( 'woocommerce_civicrm_sync_contact_phone', false );
+		$option             = get_option( 'woocommerce_civicrm_sync_contact_phone', false );
 		$this->sync_enabled = WPCV_WCI()->helper->check_yes_no_value( $option );
 
 		// Register Phone-related hooks.
@@ -100,8 +100,8 @@ class WPCV_Woo_Civi_Contact_Phone {
 	public function entities_update( $contact, $order ) {
 
 		// Only use 'billing' because there is no 'shipping_phone' in WooCommerce.
-		$location_type = 'billing';
-		$location_types = WPCV_WCI()->helper->get_mapped_location_types();
+		$location_type    = 'billing';
+		$location_types   = WPCV_WCI()->helper->get_mapped_location_types();
 		$location_type_id = (int) $location_types[ $location_type ];
 
 		// Bail if there's no Phone Number in the Order.
@@ -117,10 +117,10 @@ class WPCV_Woo_Civi_Contact_Phone {
 
 		// Prime the Phone data.
 		$phone_params = [
-			'phone_type_id' => 1,
+			'phone_type_id'    => 1,
 			'location_type_id' => $location_type_id,
-			'phone' => $phone_number,
-			'contact_id' => $contact_id,
+			'phone'            => $phone_number,
+			'contact_id'       => $contact_id,
 		];
 
 		// Get the existing Phone records for this Contact.
@@ -149,6 +149,12 @@ class WPCV_Woo_Civi_Contact_Phone {
 					return;
 				}
 			}
+		}
+
+		// Bail if the Phone Number is empty to avoid API warnings.
+		// TODO: Perhaps delete the Phone record?
+		if ( empty( $phone_params['phone'] ) ) {
+			return;
 		}
 
 		// Create new or update existing Phone record.
@@ -185,10 +191,10 @@ class WPCV_Woo_Civi_Contact_Phone {
 
 		// Let's make an array of the data.
 		$args = [
-			'phone' => $phone,
+			'phone'         => $phone,
 			'location_type' => $location_type,
-			'contact' => $contact,
-			'order' => $order,
+			'contact'       => $contact,
+			'order'         => $order,
 		];
 
 		/**
@@ -261,10 +267,21 @@ class WPCV_Woo_Civi_Contact_Phone {
 		}
 
 		// Only for Billing Phone, there's no Shipping Phone field.
-		$phone_type = array_search( (int) $object_ref->location_type_id, WPCV_WCI()->helper->get_mapped_location_types() );
+		$phone_type = array_search( (int) $object_ref->location_type_id, WPCV_WCI()->helper->get_mapped_location_types(), true );
 		if ( 'billing' !== $phone_type ) {
 			return;
 		}
+
+		/**
+		 * Fires before syncing a CiviCRM Phone from a CiviCRM Contact to a WordPress User.
+		 *
+		 * This allows plugins to unhook their callbacks which might interfere with
+		 * this syncing procedure. Callbacks can be rehooked with the corresponding
+		 * `wpcv_woo_civi/contact/phone/sync_civicrm_to_woo/post` action.
+		 *
+		 * @since 3.0
+		 */
+		do_action( 'wpcv_woo_civi/contact/phone/sync_civicrm_to_woo/pre' );
 
 		// Set the WooCommerce Customer Phone.
 		$customer = new WC_Customer( $ufmatch['uf_id'] );
@@ -273,15 +290,22 @@ class WPCV_Woo_Civi_Contact_Phone {
 			$customer->save();
 		}
 
+		/**
+		 * Fires after syncing a CiviCRM Phone from a CiviCRM Contact to a WordPress User.
+		 *
+		 * @since 3.0
+		 */
+		do_action( 'wpcv_woo_civi/contact/phone/sync_civicrm_to_woo/post' );
+
 		// Let's make an array of the data.
 		$args = [
-			'op' => $op,
+			'op'          => $op,
 			'object_name' => $object_name,
-			'object_id' => $object_id,
-			'object_ref' => $object_ref,
-			'phone_type' => $phone_type,
-			'customer' => $customer,
-			'user_id' => $ufmatch['uf_id'],
+			'object_id'   => $object_id,
+			'object_ref'  => $object_ref,
+			'phone_type'  => $phone_type,
+			'customer'    => $customer,
+			'user_id'     => $ufmatch['uf_id'],
 		];
 
 		/**
@@ -304,9 +328,9 @@ class WPCV_Woo_Civi_Contact_Phone {
 	 * @since 3.0 Renamed.
 	 *
 	 * @param integer $user_id The WordPress User ID.
-	 * @param string  $load_address The Address Type. Either 'shipping' or 'billing'.
+	 * @param string  $address_type The Address Type. Either 'shipping' or 'billing'.
 	 */
-	public function sync_woo_to_civicrm( $user_id, $load_address ) {
+	public function sync_woo_to_civicrm( $user_id, $address_type ) {
 
 		// Bail if sync is not enabled.
 		if ( ! $this->sync_enabled ) {
@@ -314,7 +338,7 @@ class WPCV_Woo_Civi_Contact_Phone {
 		}
 
 		// Bail if Phone is not of type 'billing'.
-		if ( 'billing' !== $load_address ) {
+		if ( 'billing' !== $address_type ) {
 			return;
 		}
 
@@ -326,7 +350,7 @@ class WPCV_Woo_Civi_Contact_Phone {
 
 		// Try and find the Contact.
 		$contact = WPCV_WCI()->contact->get_by_id( $ufmatch['contact_id'] );
-		if ( $contact === false ) {
+		if ( false === $contact ) {
 			return;
 		}
 
@@ -338,16 +362,16 @@ class WPCV_Woo_Civi_Contact_Phone {
 
 		// Get the "billing" Location Type ID.
 		$mapped_location_types = WPCV_WCI()->helper->get_mapped_location_types();
-		$location_type_id = $mapped_location_types[ $load_address ];
+		$location_type_id      = $mapped_location_types[ $address_type ];
 
 		// Try and get the full data for the existing Phone.
 		$existing_phone = $this->get_by_contact_id_and_location( $ufmatch['contact_id'], $location_type_id );
 
 		// Get the WooCommerce Customer Phone.
-		$customer = new WC_Customer( $user_id );
+		$customer       = new WC_Customer( $user_id );
 		$customer_phone = '';
-		if ( is_callable( [ $customer, "get_{$load_address}_phone" ] ) ) {
-			$customer_phone = $customer->{"get_{$load_address}_phone"}();
+		if ( is_callable( [ $customer, "get_{$address_type}_phone" ] ) ) {
+			$customer_phone = $customer->{"get_{$address_type}_phone"}();
 		}
 
 		// Build the array for the mapped CiviCRM Phone.
@@ -355,17 +379,23 @@ class WPCV_Woo_Civi_Contact_Phone {
 			'phone' => $customer_phone,
 		];
 
+		// Bail if the Phone Number is empty to avoid API warnings.
+		// TODO: Perhaps delete the Phone record?
+		if ( empty( $phone_params['phone'] ) ) {
+			return;
+		}
+
 		// Prevent reverse sync.
 		remove_action( 'civicrm_post', [ $this, 'sync_civicrm_to_woo' ], 10 );
 
 		// Create new Phone or update existing.
 		if ( ! empty( $existing_phone ) ) {
 			$params = array_merge( $existing_phone, $phone_params );
-			$phone = $this->update( $params );
+			$phone  = $this->update( $params );
 		} else {
-			$phone_params['contact_id'] = $ufmatch['contact_id'];
+			$phone_params['contact_id']       = $ufmatch['contact_id'];
 			$phone_params['location_type_id'] = $location_type_id;
-			$phone = $this->create( $phone_params );
+			$phone                            = $this->create( $phone_params );
 		}
 
 		// Rehook callback.
@@ -373,11 +403,11 @@ class WPCV_Woo_Civi_Contact_Phone {
 
 		// Let's make an array of the data.
 		$args = [
-			'user_id' => $user_id,
-			'address_type' => $load_address,
-			'customer' => $customer,
-			'contact' => $ufmatch,
-			'phone' => $phone,
+			'user_id'      => $user_id,
+			'address_type' => $address_type,
+			'customer'     => $customer,
+			'contact'      => $ufmatch,
+			'phone'        => $phone,
 		];
 
 		/**
@@ -411,19 +441,23 @@ class WPCV_Woo_Civi_Contact_Phone {
 			return false;
 		}
 
-		// Call the API.
-		$result = civicrm_api3( 'Phone', 'create', $params );
+		// Add API version.
+		$params['version'] = 3;
 
-		// Log and bail if there's an error.
+		// Call the API.
+		$result = civicrm_api( 'Phone', 'create', $params );
+
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
-			$e = new Exception();
+			$e     = new Exception();
 			$trace = $e->getTraceAsString();
-			error_log( print_r( [
-				'method' => __METHOD__,
-				'params' => $params,
-				'result' => $result,
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
 				'backtrace' => $trace,
-			], true ) );
+			];
+			WPCV_WCI()->log_error( $log );
 			return false;
 		}
 
@@ -452,14 +486,15 @@ class WPCV_Woo_Civi_Contact_Phone {
 
 		// Log and bail if there's no Phone ID.
 		if ( empty( $params['id'] ) ) {
-			$e = new \Exception();
+			$e     = new \Exception();
 			$trace = $e->getTraceAsString();
-			error_log( print_r( [
-				'method' => __METHOD__,
-				'message' => __( 'A numeric ID must be present to update a Phone record.', 'wpcv-woo-civi-integration' ),
-				'phone' => $phone,
+			$log   = [
+				'method'    => __METHOD__,
+				'message'   => __( 'A numeric ID must be present to update a Phone record.', 'wpcv-woo-civi-integration' ),
+				'phone'     => $phone,
 				'backtrace' => $trace,
-			], true ) );
+			];
+			WPCV_WCI()->log_error( $log );
 			return false;
 		}
 
@@ -488,7 +523,7 @@ class WPCV_Woo_Civi_Contact_Phone {
 		// Construct API query.
 		$params = [
 			'version' => 3,
-			'id' => $phone_id,
+			'id'      => $phone_id,
 		];
 
 		// Get Phone Record details via API.
@@ -532,8 +567,8 @@ class WPCV_Woo_Civi_Contact_Phone {
 
 		// Construct API query.
 		$params = [
-			'version' => 3,
-			'contact_id' => $contact_id,
+			'version'          => 3,
+			'contact_id'       => $contact_id,
 			'location_type_id' => $location_type_id,
 		];
 
@@ -581,10 +616,10 @@ class WPCV_Woo_Civi_Contact_Phone {
 
 		// Define params to get queried Phone Records.
 		$params = [
-			'version' => 3,
+			'version'    => 3,
 			'sequential' => 1,
 			'contact_id' => $contact_id,
-			'options' => [
+			'options'    => [
 				'limit' => 0, // No limit.
 			],
 		];
