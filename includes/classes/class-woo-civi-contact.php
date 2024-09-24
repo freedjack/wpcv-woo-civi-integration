@@ -971,6 +971,17 @@ class WPCV_Woo_Civi_Contact {
 
 		// First check if this Order has the Contact ID stored in its meta data.
 		$contact_id = $this->get_order_meta( $order->get_id() );
+		
+		////
+		// Custom check to avoid of duplicate emails
+		$user_id = $order->get_customer_id();
+       
+    $user_data = get_userdata($user_id);
+		if ($user_data) {
+  	  $email = $user_data->user_email;
+  	  $contact_id = $this->get_civi_id_from_email($email);
+		}
+		// end
 
 		// Return early if it does.
 		if ( ! empty( $contact_id ) ) {
@@ -1029,6 +1040,30 @@ class WPCV_Woo_Civi_Contact {
 		return $contact_id;
 
 	}
+
+
+	//////////////////////////////////////////////////////////////////////////////
+	// Helper function
+	public function get_civi_id_from_email($email) {
+ 
+    if(!$email) {
+        // echo 'User email not found for user ID: ';
+        return null;
+    }
+    $result = civicrm_api3('Contact', 'get', [
+        'sequential' => 1,
+        'return' => ['id'],
+        'email' => $email,
+    ]);
+
+
+    if ($result['count'] > 0) {
+        // CiviCRM contact found
+       return $result['values'][0]['id'];
+    }
+    return null;
+	}
+
 
 	/**
 	 * Gets the array of top-level CiviCRM Contact Types.
