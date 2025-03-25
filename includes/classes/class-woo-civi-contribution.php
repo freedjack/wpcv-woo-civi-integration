@@ -442,7 +442,19 @@ class WPCV_Woo_Civi_Contribution {
 		}
 
 		try {
+			// Trim source field if over 128 chars
+			if (isset($params['source']) && strlen($params['source']) > 128) {
+				$params['source'] = substr($params['source'], 0, 128);
+			}
 
+			// Also trim source in line items
+			if (isset($params['line_items'])) {
+				foreach ($params['line_items'] as &$line_item) {
+					if (isset($line_item['params']['source']) && strlen($line_item['params']['source']) > 128) {
+						$line_item['params']['source'] = substr($line_item['params']['source'], 0, 128);
+					}
+				}
+			}
 			$result = civicrm_api3( 'Order', 'create', $params );
 
 		} catch ( Exception $e ) {
