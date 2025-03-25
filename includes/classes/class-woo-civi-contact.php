@@ -1045,23 +1045,21 @@ class WPCV_Woo_Civi_Contact {
 	//////////////////////////////////////////////////////////////////////////////
 	// Helper function
 	public function get_civi_id_from_email($email) {
- 
-    if(!$email) {
-        // echo 'User email not found for user ID: ';
-        return null;
-    }
-    $result = civicrm_api3('Contact', 'get', [
-        'sequential' => 1,
-        'return' => ['id'],
-        'email' => $email,
-    ]);
+		if (!$email) {
+			// echo 'User email not found for user ID: ';
+			return null;
+		}
+		$result = civicrm_api3('Contact', 'get', [
+			'sequential' => 1,
+			'return' => ['id'],
+			'email' => $email,
+		]);
 
-
-    if ($result['count'] > 0) {
-        // CiviCRM contact found
-       return $result['values'][0]['id'];
-    }
-    return null;
+		if ($result['count'] > 0) {
+			// CiviCRM contact found
+			return $result['values'][0]['id'];
+		}
+		return null;
 	}
 
 
