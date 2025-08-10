@@ -25,7 +25,7 @@ class WPCV_Woo_Civi_Membership {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var array $active The status of the CiviMember component.
+	 * @var bool
 	 */
 	public $active = false;
 
@@ -34,7 +34,7 @@ class WPCV_Woo_Civi_Membership {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $meta_key The WooCommerce Product meta key.
+	 * @var string
 	 */
 	public $meta_key = '_woocommerce_civicrm_membership_type_id';
 
@@ -43,7 +43,7 @@ class WPCV_Woo_Civi_Membership {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $pfv_key The CiviCRM Membership Price Field Value ID meta key.
+	 * @var string
 	 */
 	public $pfv_key = '_woocommerce_civicrm_membership_pfv_id';
 
@@ -376,7 +376,7 @@ class WPCV_Woo_Civi_Membership {
 			// Grab the error data.
 			$message = $e->getMessage();
 			$code    = $e->getErrorCode();
-			$extra   = $e->getExtraParams();
+			$extra   = print_r( $e->getExtraParams(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to retrieve CiviCRM Membership Types.', 'wpcv-woo-civi-integration' ) );
@@ -449,7 +449,7 @@ class WPCV_Woo_Civi_Membership {
 			// Grab the error data.
 			$message = $e->getMessage();
 			$code    = $e->getErrorCode();
-			$extra   = $e->getExtraParams();
+			$extra   = print_r( $e->getExtraParams(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to retrieve CiviCRM Membership Type.', 'wpcv-woo-civi-integration' ) );
@@ -512,7 +512,7 @@ class WPCV_Woo_Civi_Membership {
 			// Grab the error data.
 			$message = $e->getMessage();
 			$code    = $e->getErrorCode();
-			$extra   = $e->getExtraParams();
+			$extra   = print_r( $e->getExtraParams(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to retrieve default Membership Price Field ID', 'wpcv-woo-civi-integration' ) );
