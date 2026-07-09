@@ -25,7 +25,7 @@ class WPCV_Woo_Civi_Contribution {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var array $active The status of the CiviContribute component.
+	 * @var bool
 	 */
 	public $active = false;
 
@@ -34,7 +34,7 @@ class WPCV_Woo_Civi_Contribution {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $meta_key The WooCommerce Order meta key.
+	 * @var string
 	 */
 	public $meta_key = '_woocommerce_civicrm_contribution_id';
 
@@ -450,7 +450,7 @@ class WPCV_Woo_Civi_Contribution {
 			// Grab the error data.
 			$message = $e->getMessage();
 			$code    = $e->getErrorCode();
-			$extra   = $e->getExtraParams();
+			$extra   = print_r( $e->getExtraParams(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to create an Order via the CiviCRM Order API', 'wpcv-woo-civi-integration' ) );
@@ -678,9 +678,20 @@ class WPCV_Woo_Civi_Contribution {
 			return false;
 		}
 
+		// Get our zero amount setting.
+		$ignore_zero_orders = WPCV_WCI()->helper->check_yes_no_value( get_option( 'woocommerce_civicrm_ignore_0_amount_orders', false ) );
+
+		/**
+		 * Filter the "Do not create 0 amount Contributions" setting.
+		 *
+		 * @since 3.1.2
+		 *
+		 * @param bool   $ignore_zero_orders The value of the setting.
+		 * @param object $order The Order object.
+		 */
+		$ignore_zero_orders = apply_filters( 'wpcv_woo_civi/setting/ignore_0_amount_orders', $ignore_zero_orders, $order );
+
 		// Bail early if the Order is 'free' (0 amount) and 0 amount setting is enabled.
-		$ignore             = get_option( 'woocommerce_civicrm_ignore_0_amount_orders', false );
-		$ignore_zero_orders = WPCV_WCI()->helper->check_yes_no_value( $ignore );
 		if ( $ignore_zero_orders && $order->get_total() === 0 ) {
 			return false;
 		}
@@ -754,7 +765,7 @@ class WPCV_Woo_Civi_Contribution {
 			// Grab the error data.
 			$message = $e->getMessage();
 			$code    = $e->getErrorCode();
-			$extra   = $e->getExtraParams();
+			$extra   = print_r( $e->getExtraParams(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to create Payment record.', 'wpcv-woo-civi-integration' ) );
@@ -827,15 +838,26 @@ class WPCV_Woo_Civi_Contribution {
 			return;
 		}
 
-		// Get the full data for the Payment.
+		// Build params to get the full data for the Payment.
 		$params = [
 			'version' => 3,
 			'id'      => (int) $payment_data['id'],
 		];
+
+		// Call the CiviCRM API.
 		$result = civicrm_api( 'FinancialTrxn', 'get', $params );
 
-		// Bail if there's an error.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
 			return;
 		}
 
@@ -848,6 +870,19 @@ class WPCV_Woo_Civi_Contribution {
 
 		// Okay, now update the Payment.
 		$result = civicrm_api( 'FinancialTrxn', 'create', $params );
+
+		// Log if something went wrong.
+		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
+		}
 
 	}
 
@@ -883,7 +918,7 @@ class WPCV_Woo_Civi_Contribution {
 			// Grab the error data.
 			$message = $e->getMessage();
 			$code    = $e->getErrorCode();
-			$extra   = $e->getExtraParams();
+			$extra   = print_r( $e->getExtraParams(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to create a Note for a Contribution.', 'wpcv-woo-civi-integration' ) );
@@ -1013,14 +1048,14 @@ class WPCV_Woo_Civi_Contribution {
 			'wc-pending'    => 2,
 			'wc-cancelled'  => 3,
 			'wc-failed'     => 4,
-			'wc-processing' => 2,
+			'wc-processing' => 1,
 			'wc-on-hold'    => 2,
 			'wc-refunded'   => 7,
 			'completed'     => 1,
 			'pending'       => 2,
 			'cancelled'     => 3,
 			'failed'        => 4,
-			'processing'    => 2,
+			'processing'    => 1,
 			'on-hold'       => 2,
 			'refunded'      => 7,
 		];

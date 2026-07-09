@@ -23,7 +23,7 @@ class WPCV_Woo_Civi_Products {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $entity_key The CiviCRM Entity Type meta key.
+	 * @var string
 	 */
 	public $entity_key = '_woocommerce_civicrm_entity_type';
 
@@ -32,7 +32,7 @@ class WPCV_Woo_Civi_Products {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $financial_type_key The CiviCRM Financial Type ID meta key.
+	 * @var string
 	 */
 	public $financial_type_key = '_woocommerce_civicrm_financial_type_id';
 
@@ -41,7 +41,7 @@ class WPCV_Woo_Civi_Products {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $pfv_key The CiviCRM Contribution Price Field Value ID meta key.
+	 * @var string
 	 */
 	public $pfv_key = '_woocommerce_civicrm_contribution_pfv_id';
 
@@ -50,9 +50,27 @@ class WPCV_Woo_Civi_Products {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $purchase_activity The array of Purchase Activity Details.
+	 * @var array
 	 */
 	public $purchase_activity = [];
+
+	/**
+	 * WooCommerce Products Controller.
+	 *
+	 * @since 3.0
+	 * @access public
+	 * @var WC_REST_Products_Controller
+	 */
+	public $products_controller;
+
+	/**
+	 * WooCommerce Variations Controller.
+	 *
+	 * @since 3.0
+	 * @access public
+	 * @var WC_REST_Product_Variations_Controller
+	 */
+	public $variations_controller;
 
 	/**
 	 * Class constructor.
@@ -258,11 +276,20 @@ class WPCV_Woo_Civi_Products {
 
 			$product_financial_type_id = $product->get_meta( $this->financial_type_key );
 
+			// Build price query args.
+			$args = [
+				'qty'   => 1,
+				'price' => $product->get_price(),
+			];
+
+			// Get the price excluding tax for CiviCRM.
+			$unit_price = wc_get_price_excluding_tax( $product, $args );
+
 			// Build default Line Item data.
 			$line_item_data = [
 				'entity_table'   => 'civicrm_contribution',
 				'price_field_id' => $default_price_field_id,
-				'unit_price'     => $product->get_price(),
+				'unit_price'     => $unit_price,
 				'qty'            => $item->get_quantity(),
 				// The "line_total" must equal the unit_price × qty.
 				'line_total'     => $item->get_total(),
@@ -576,7 +603,7 @@ class WPCV_Woo_Civi_Products {
 			// Grab the error data.
 			$message = $e->getMessage();
 			$code    = $e->getErrorCode();
-			$extra   = $e->getExtraParams();
+			$extra   = print_r( $e->getExtraParams(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 
 			// Write to CiviCRM log.
 			CRM_Core_Error::debug_log_message( __( 'Unable to retrieve default Contribution Price Field ID', 'wpcv-woo-civi-integration' ) );
@@ -897,6 +924,40 @@ class WPCV_Woo_Civi_Products {
 
 		// Create the Product Variation.
 		$result = $this->variations_controller->create_item( $request );
+
+		// The Product Variation data is what we want.
+		$variation = isset( $result->data ) ? $result->data : false;
+
+		return $variation;
+
+	}
+
+	/**
+	 * Updates a WooCommerce Product Variation.
+	 *
+	 * @since 3.1.3
+	 *
+	 * @param array $params The set of data to create the WooCommerce Product Variation.
+	 * @return array $variation The array of WooCommerce Product Variation data, or empty on failure.
+	 */
+	public function update_variation( $params ) {
+
+		// Bail if there is no Variation ID.
+		if ( empty( $params['id'] ) ) {
+			return false;
+		}
+
+		// Build request.
+		$request = new WP_REST_Request( 'PUT' );
+		$request->set_body_params( $params );
+
+		// Maybe initialise the Variations Controller.
+		if ( ! isset( $this->variations_controller ) ) {
+			$this->variations_controller = new WC_REST_Product_Variations_Controller();
+		}
+
+		// Create the Product Variation.
+		$result = $this->variations_controller->update_item( $request );
 
 		// The Product Variation data is what we want.
 		$variation = isset( $result->data ) ? $result->data : false;

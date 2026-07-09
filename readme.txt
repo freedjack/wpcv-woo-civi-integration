@@ -1,14 +1,15 @@
 === Integrate CiviCRM with WooCommerce ===
 Contributors: needle, bastho, mecachisenros, rajeshrhino, kcristiano, tadpolecc
+Donate link: https://www.paypal.me/interactivist
 Tags: civicrm, woocommerce, integration
-Requires PHP: 7.4
 Requires at least: 5.7
-Tested up to: 6.5
-Stable tag: 3.1.2a
-License: GPLv3
-License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Tested up to: 7.0
+Stable tag: 3.1.4a
+Requires PHP: 7.4
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
-Creates CiviCRM Contributions, Memberships and Participants from WooCommerce Orders and keeps WooCommerce Customer Accounts in sync with CiviCRM Contact data.
+Creates CiviCRM Contributions, Memberships and Participants from WooCommerce Orders and keeps Customer Accounts in sync with CiviCRM Contact data.
 
 
 
@@ -96,10 +97,6 @@ Configure settings for an Order in the *General* section of the "New Order" and 
 
 == Known Issues ==
 
-This plugin currently relies on the `Order.create` and `Payment.create` API in CiviCRM to register WooCommerce Orders as CiviCRM Contributions. There is currently a push in CiviCRM to fix various aspects of this API, which is why this plugin should ideally be used with CiviCRM 5.42.1 or greater.
-
-The biggest outstanding issue is for Orders with a number of taxable Products in the same Order. The plugin works well if you are able to avoid taxable Products.
-
 Creating Orders in WooCommerce admin is not fully supported. It is best to create Orders via the Checkout.
 
 
@@ -113,20 +110,5 @@ Creating Orders in WooCommerce admin is not fully supported. It is best to creat
 
 
 == Changelog ==
-
-= 3.1.1 =
-
-* Improved codestyle compatibility.
-* Misc fixes to APIv3 error handling.
-
-= 3.1.0 =
-
-* Improved CiviCRM API error handling.
-
-= 3.0 =
-
-* Initial WordPress Plugin Directory release candidate.
-
-= Prior to 3.0 =
 
 * Please refer to [the changelog](https://github.com/WPCV/wpcv-woo-civi-integration/commits/main) at this plugin's [GitHub repo](https://github.com/WPCV/wpcv-woo-civi-integration).

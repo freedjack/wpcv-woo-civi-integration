@@ -37,7 +37,7 @@ class WPCV_Woo_Civi_Contact_Address {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var bool $sync_enabled True when Address Sync is enabled, false otherwise.
+	 * @var bool
 	 */
 	public $sync_enabled = false;
 
@@ -48,7 +48,7 @@ class WPCV_Woo_Civi_Contact_Address {
 	 *
 	 * @since 2.0
 	 * @access public
-	 * @var array $location_types The Address Location Types.
+	 * @var array
 	 */
 	public $location_types;
 
@@ -185,7 +185,7 @@ class WPCV_Woo_Civi_Contact_Address {
 				'name'                   => $company,
 				'street_address'         => $address_1,
 				'supplemental_address_1' => $address_2,
-				'country'                => $country_id,
+				'country_id'             => $country_id,
 				'state_province_id'      => $state_province_id,
 				'contact_id'             => $contact_id,
 			];
@@ -597,7 +597,7 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
-			$e     = new Exception();
+			$e     = new \Exception();
 			$trace = $e->getTraceAsString();
 			$log   = [
 				'method'    => __METHOD__,
@@ -678,8 +678,17 @@ class WPCV_Woo_Civi_Contact_Address {
 		// Get Address details via API.
 		$result = civicrm_api( 'Address', 'get', $params );
 
-		// Bail if there's an error.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
 			return $addresses;
 		}
 
@@ -726,9 +735,18 @@ class WPCV_Woo_Civi_Contact_Address {
 		// Get Address details via API.
 		$result = civicrm_api( 'Address', 'get', $params );
 
-		// Bail if there's an error.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
-			return $address;
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
+			return $addresses;
 		}
 
 		// Bail if there are no results.
@@ -771,9 +789,18 @@ class WPCV_Woo_Civi_Contact_Address {
 		// Get Address details via API.
 		$result = civicrm_api( 'Address', 'get', $params );
 
-		// Bail if there's an error.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
-			return $address;
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
+			return $addresses;
 		}
 
 		// Bail if there are no results.
@@ -819,9 +846,18 @@ class WPCV_Woo_Civi_Contact_Address {
 		// Get Address details via API.
 		$result = civicrm_api( 'Address', 'get', $params );
 
-		// Bail if there's an error.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
-			return $address;
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
+			return $addresses;
 		}
 
 		// Bail if there are no results.
@@ -864,8 +900,17 @@ class WPCV_Woo_Civi_Contact_Address {
 		// Get Address details via API.
 		$result = civicrm_api( 'Address', 'get', $params );
 
-		// Bail if there's an error.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
 			return $addresses;
 		}
 
@@ -914,10 +959,8 @@ class WPCV_Woo_Civi_Contact_Address {
 
 		$result = civicrm_api( 'Address', 'getoptions', $params );
 
-		// Return early if something went wrong.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
-
-			// Write details to PHP log.
 			$e     = new \Exception();
 			$trace = $e->getTraceAsString();
 			$log   = [
@@ -927,9 +970,7 @@ class WPCV_Woo_Civi_Contact_Address {
 				'backtrace' => $trace,
 			];
 			WPCV_WCI()->log_error( $log );
-
 			return $this->location_types;
-
 		}
 
 		// Store values in property.

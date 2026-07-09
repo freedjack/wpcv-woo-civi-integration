@@ -24,7 +24,7 @@ class WPCV_Woo_Civi_Contact {
 	 *
 	 * @since 2.1
 	 * @access public
-	 * @var object $email The Email sync object.
+	 * @var WPCV_Woo_Civi_Contact_Email
 	 */
 	public $email;
 
@@ -33,7 +33,7 @@ class WPCV_Woo_Civi_Contact {
 	 *
 	 * @since 2.1
 	 * @access public
-	 * @var object $phone The Phone sync object.
+	 * @var WPCV_Woo_Civi_Contact_Phone
 	 */
 	public $phone;
 
@@ -42,7 +42,7 @@ class WPCV_Woo_Civi_Contact {
 	 *
 	 * @since 2.1
 	 * @access public
-	 * @var object $address The Address sync object.
+	 * @var WPCV_Woo_Civi_Contact_Address
 	 */
 	public $address;
 
@@ -51,7 +51,7 @@ class WPCV_Woo_Civi_Contact {
 	 *
 	 * @since 2.0
 	 * @access public
-	 * @var object $orders_tab The Orders Tab management object.
+	 * @var WPCV_Woo_Civi_Contact_Orders_Tab
 	 */
 	public $orders_tab;
 
@@ -60,7 +60,7 @@ class WPCV_Woo_Civi_Contact {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $meta_key The WooCommerce Order meta key.
+	 * @var string
 	 */
 	public $meta_key = '_woocommerce_civicrm_contact_id';
 
@@ -69,7 +69,7 @@ class WPCV_Woo_Civi_Contact {
 	 *
 	 * @since 3.0
 	 * @access public
-	 * @var string $is_checkout True if in Checkout, false otherwise.
+	 * @var bool
 	 */
 	public $is_checkout = false;
 
@@ -903,16 +903,19 @@ class WPCV_Woo_Civi_Contact {
 		// Get the primed Contact data from the Order.
 		$prepared_contact = $this->prepare_from_order( $order );
 
-		// FIXME: Shouldn't the following depend on if there is existing data?
-		// Change: Added contact name checks.
+		/*
+		 * The following updates depend on whether there is existing data in CiviCRM.
+		 * It is assumed that existing data in CiviCRM is correct, so does not overwrite
+		 * it when it exists.
+		 */
 
-		// Overwrite First Name with data from Order.
-		if ( empty($contact['first_name']) && ! empty( $prepared_contact['first_name'] ) ) {
+		// Use First Name from Order if existing First Name is empty.
+		if ( empty( $contact['first_name'] ) && ! empty( $prepared_contact['first_name'] ) ) {
 			$contact['first_name'] = $prepared_contact['first_name'];
 		}
 
-		// Overwrite Last Name with data from Order.
-		if ( empty($contact['last_name']) && ! empty( $prepared_contact['last_name'] ) ) {
+		// Use Last Name from Order if existing Last Name is empty.
+		if ( empty( $contact['last_name'] ) && ! empty( $prepared_contact['last_name'] ) ) {
 			$contact['last_name'] = $prepared_contact['last_name'];
 		}
 
@@ -1124,8 +1127,17 @@ class WPCV_Woo_Civi_Contact {
 		// Call API.
 		$result = civicrm_api( 'ContactType', 'get', $params );
 
-		// Bail if there's an error.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
 			return $nested;
 		}
 
@@ -1264,8 +1276,17 @@ class WPCV_Woo_Civi_Contact {
 		// Call the API.
 		$result = civicrm_api( 'ContactType', 'get', $params );
 
-		// Bail if there's an error.
+		// Log and bail if something went wrong.
 		if ( ! empty( $result['is_error'] ) && 1 === (int) $result['is_error'] ) {
+			$e     = new \Exception();
+			$trace = $e->getTraceAsString();
+			$log   = [
+				'method'    => __METHOD__,
+				'params'    => $params,
+				'result'    => $result,
+				'backtrace' => $trace,
+			];
+			WPCV_WCI()->log_error( $log );
 			return $contact_type_data;
 		}
 
